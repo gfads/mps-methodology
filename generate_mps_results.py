@@ -6,14 +6,14 @@ DEPLOYMENTS = ['frontend']
 ACCURACY_METRICS = ['rmse']
 WINDOW_SIZES = [10, 20, 30, 40, 50, 60]
 
-
+"""
 # cpu values
 W = [['decreasing'], ['increasing'], ['periodic'], ['random']]
 METRICS = ['cpu']
 WS = [[10], [60], [10], [10]]
 B = [150, 110, 100, 100]
 HOMOGENEOUS = [['mlpbagging'], ['rfbagging'], ['rfbagging'], ['rfbagging']]
-
+"""
 
 """
 # memory values
@@ -24,14 +24,14 @@ B = [80, 40, 20, 100]
 HOMOGENEOUS = [['mlpbagging'], ['lstmbagging'], ['lstmbagging'], ['rfbagging']]
 """
 
-"""
+
 # responsetime values
 W = [['decreasing'], ['increasing'], ['periodic'], ['random']]
 METRICS = ['responsetime']
 WS = [[50], [30], [40], [40]]
-B = [150, 90, 100, 90]
+B = [150, 30, 100, 90]
 HOMOGENEOUS = [['mlpbagging'], ['rfbagging'], ['rfbagging'], ['rfbagging']]
-"""
+
 
 """
 # traffic values
@@ -42,7 +42,7 @@ B = [100, 100, 110, 150]
 HOMOGENEOUS = [['mlpbagging'], ['mlpbagging'], ['rfbagging'], ['rfbagging']]
 """
 
-for i in range(0, 4):
+for i in range(1, 2):
     MODEL_NAMES = ['arima', 'lstm', 'mlp', 'rf', 'svr', 'xgboost']
     parameters = list(product(ACCURACY_METRICS, DEPLOYMENTS, METRICS, MODEL_NAMES, W[i], WINDOW_SIZES))
     calculate_accuracy_metrics_and_save_pickle(parameters, "/monolithic/")

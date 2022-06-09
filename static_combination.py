@@ -1,14 +1,13 @@
 from generate_results_fuctions import load_pickle_static, static_combination, generate_path_id, generate_idmodels
 
-WORKLOAD = ['decreasing']
-METRICS = ['cpu']
+WORKLOAD = ['decreasing', 'increasing', 'periodic', 'random']
+METRICS = ['responsetime']
 DEPLOYMENTS = ['frontend']
 
-# IF Homogeneous to CPU
-
-WS = [10, 10, 10, 10]
-B = [10, 10, 10, 10]
-MN = ['mlpbagging', 'rfbagging', 'rfbagging', 'rfbagging']
+# IF Homogeneous to ResponseTime
+WS = [50, 30, 40, 40]
+B = [150, 30, 100, 90]
+MN = ['mlp', 'rf', 'rf', 'rf']
 
 """
 # Heterogeneous
@@ -26,10 +25,10 @@ WS = [[10, 10, 10, 30, 10, 60],
 ACCURACY_METRICS = ['rmse']
 CENTRAL_MEASURES = ['mean', 'median']
 
-path_id = generate_path_id(DEPLOYMENTS, METRICS, WORKLOAD)
+path_id = generate_path_id(METRICS, WORKLOAD, MN, 'homogeneous')
 
 for i in range(0, 4):
-    id_models = generate_idmodels(B[i], MN[i], 'he', WS[i])
+    id_models = generate_idmodels(B[i], METRICS, MN[i], 'homogeneous', WS[i])
     dataset = load_pickle_static(ACCURACY_METRICS, id_models, path_id[i])
 
-    static_combination(ACCURACY_METRICS, CENTRAL_MEASURES, dataset, id_models, 'he', path_id[i])
+    static_combination(ACCURACY_METRICS, CENTRAL_MEASURES, dataset, id_models, 'homogeneous', path_id[i])

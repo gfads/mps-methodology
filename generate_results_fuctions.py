@@ -368,7 +368,8 @@ def save_accuracy_metrics_one_model(parameters: list, folder_name: str = 'Result
     for accuracy_metric, deployment, metric, ml_model, target_variable in parameters:
         file_path = ""
         if ml_model[-11:] == 'homogeneous':
-            file_path = target_variable + "/homogeneous/"  + metric + ml_model
+            file_path = target_variable + "/homogeneous/" + metric + ml_model
+            print(file_path)
         else:
             file_path = target_variable + "/heterogeneous/" + metric + ml_model
 
@@ -452,6 +453,7 @@ def load_pickle_static(acurracy_metrics, id_models, path_id):
         df_pickle = load_pickle(path_id + id_model)
 
         if id_model[0: 4] == 'lstm':
+            print(df_pickle['model'])
             model = load_model(df_pickle['model'], id_model)
         else:
             model = df_pickle['model']
@@ -507,7 +509,9 @@ def static_combination(acurracy_metrics, central_measures, dataset, id_models, n
                 df_pickle[accuracy_metric + '_' + sample] = calculate_model_accuracy(y_true, y_pred, accuracy_metric)
                 print(df_pickle[accuracy_metric + '_' + sample])
 
-        save_pickle(df_pickle, path_id + 'static_' + cm + '_' + name_pickle)
+        path_split = path_id.split('/', 4)
+        save_pickle(df_pickle, path_split[0] + "/" +name_pickle + "/" + path_split[3] + 'static_' + cm + '_' + name_pickle)
+        #save_pickle(df_pickle, path_id + 'static_' + cm + '_' + name_pickle)
 
 
 
@@ -593,7 +597,7 @@ def calculate_the_down_alfa_dws(vector_predict, ws_mls):
 
 # Criar as chaves
 
-def generate_idmodels(bagging: int, model_names: str, type: str, window_sizes: int) -> list:
+def generate_idmodels(bagging: int, metric: list, model_names: str, type: str, window_sizes: int) -> list:
     """
 
     :param model_names:
@@ -602,21 +606,30 @@ def generate_idmodels(bagging: int, model_names: str, type: str, window_sizes: i
     """
     id_models = []
 
-    if type == 'ho':
+    if type == 'homogeneous':
         for i in range(0, bagging):
-            id_models.append(model_names + str(i) + str(window_sizes))
-    elif type == 'he':
+            id_models.append(model_names + "bagging" + str(i) + str(window_sizes))
+    elif type == 'heteregoneous':
         for j in range(0, len(model_names)):
-            id_models.append(model_names[j] + str(window_sizes[j]))
+            id_models.append(model_names[j] + "/monolithic/" + metric[0] + model_names[j] + str(window_sizes[j]))
 
     return id_models
 
 
-def generate_path_id(deployments: list, metric: list, workload: list):
-    path_id = []
-    for w in workload:
-        for m in metric:
-            for d in deployments:
-                path_id.append(w + m + d)
+def generate_path_id(metric: list, workload: list, models: list, type: str):
 
-    return path_id
+    if type == 'homogeneous':
+        path_id = []
+        for wi in range(0, len(workload)):
+            path_id.append(workload[wi] + "/" + models[wi] + "/bagging/" + metric[0] + "/" + metric[0])
+
+        return path_id
+    else:
+        path_id = []
+        for wi in range(0, len(workload)):
+            path_id.append(workload[wi] + "/")
+
+        #for m in models[wi]:
+                #path_id.append(workload[wi] + "/" + str(m) + "/monolithic/" + metric[0])
+
+        return path_id
