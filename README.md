@@ -3,7 +3,7 @@
  
  ## Project description
  
-This methodology is a project that proposes applying the Multiple Preditors System (MPS) to forecasts time series extracted from Microservice-Based Applications (MBAs). MPSs are composed of a set of forecasting models, which, in turn, mitigates the uncertainties inherent in choosing a single forecasting model. Thus, MPS adoption improves the behaviour’s forecast of system objectives, contributing to developing adaptive proactive systems more reliable and robust. Also, the methodology operates with pools homogeneous (all models are trained using a specific learning algorithm) and heterogeneous (trained using different learning algorithms). 
+This methodology is a project that proposes applying the Multiple Preditors System (MPS) to forecasts time series extracted from Microservice-Based Applications (MBAs). MPS are composed of a set of forecasting models, which, in turn, mitigates the uncertainties inherent in choosing a single forecasting model. Thus, MPS adoption improves the behaviour’s forecast of system objectives, contributing to developing adaptive proactive systems more reliable and robust. Also, the methodology operates with pools homogeneous (all models are trained using a specific learning algorithm) and heterogeneous (trained using different learning algorithms). 
 
 The monolithic models adopted to train are AutoRegressive Integrated Moving Average (ARIMA), Long Short-Term Memory (LSTM), Multilayer Perceptron (MLP), Support Vector Regressor (SVR), Random Forest (RF), and eXtreme Gradient Boosting (XGBoost). For the selection module, three dynamic selection algorithms were chosen: DS, DW, DWS. Also, two static approaches Mean and Median, were adopted. 
 
@@ -79,6 +79,7 @@ The results discussed in the article are available into Results folder.
     
 ## How to regenerate results using pickle models?
     $ rm Results/ -r
+    $ mkdir Results/
     $ python3 generate_monolith_results.py 
     $ python3 generate_mps_results.py 
     
@@ -88,7 +89,7 @@ The results discussed in the article are available into Results folder.
 |----------------------------|--------------------------------------------------------------------------|
 | training_models_main.py    | Generation of monolithic models and homogeneous bagging.                 |
 | dynamic_selection_main.py  | Dynamic MPS training using DS, DW and DWS                                |
-| static_combination.py      | Training of static MPSs using Mean and Median.                           |
+| static_combination.py      | Training of static MPS using Mean and Median.                           |
 
 
 
