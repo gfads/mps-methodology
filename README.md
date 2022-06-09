@@ -37,7 +37,7 @@ The parameters adopted into models’ training is summarises below:
 |              | Periodic   | LSTM            | 20             | 20                    |
 |              | Random     | RF              | 40             | 100                   |
 |              | Decreasing | MLP             | 50             | 150                   |
-|Response Time | Increasing | RF              | 30             | 90                    |
+|Response Time | Increasing | RF              | 30             | 30                    |
 |              | Periodic   | RF              | 40             | 100                   |
 |              | Random     | RF              | 40             | 90                    |
 |              | Decreasing | MLP             | 60             | 100                   |
@@ -65,7 +65,7 @@ The results discussed in the article are available into Results folder.
 | Summary/better_acurracy    | It contains the best acurray values for each monolithic.                         |
 | Summary/better_pool_values | MPS performance.                                                                 |
 | Summary/better_pool_values_aggregate | It contains aggregated data of better_pool_values and better_acurracy  |
-| Summary/MPS_information    | It contains data from the optimal bagging size analysis for each time series.    |
+| Summary/pool_size_homogeneous_analisys   | It contains data from the optimal bagging size analysis for each time series.    |
 
 
 # Instalattion  
