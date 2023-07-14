@@ -5,7 +5,7 @@ from pickle_functions import ml_models_bagging
 ACCURACY_METRICS = ['mse', 'rmse', 'nrmse', 'nrmse', 'mape', 'smape', 'arv', 'mae']
 WINDOW_SIZES = [10, 20, 30, 40, 50, 60]
 
-for metric in ['traffic']:
+for metric in ['cpu', 'memory', 'responsetime', 'traffic']:
     W = [['decreasing'], ['increasing'], ['periodic'], ['random']]
     METRIC = [metric]
 

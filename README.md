@@ -29,7 +29,7 @@ Be patient. This process can take a while. Between 15-30 minutes per performance
     $ rm Results/ -r; mkdir Results/
     $ python3 generate_mps_results.py 
 
-If you wish, you can generate the values of a specific metric by changing the file [generate_mps_results.py in line 8](/gene).
+If you wish, you can generate the values of a specific metric by changing the file [generate_mps_results.py in line 8](https://github.com/ML-Adapt/mps-methodology/blob/581c27a4e7e1e1e03b416f52fdd65b3abeabe563/generate_mps_results.py#L8).
 For example, to generate results for just the memory metric, do:
 
     $ for metric in ['memory']:
