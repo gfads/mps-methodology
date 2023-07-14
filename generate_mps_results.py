@@ -2,9 +2,8 @@ from generate_results_fuctions import *
 from itertools import product
 from pickle_functions import ml_models_bagging
 
-ACCURACY_METRICS = ['rmse']
+ACCURACY_METRICS = ['mse', 'rmse', 'nrmse', 'nrmse', 'mape', 'smape', 'arv', 'mae']
 WINDOW_SIZES = [10, 20, 30, 40, 50, 60]
-
 
 # cpu values
 W = [['decreasing'], ['increasing'], ['periodic'], ['random']]
@@ -14,32 +13,30 @@ B = [150, 110, 100, 100]
 HOMOGENEOUS = [['mlpbagging'], ['rfbagging'], ['rfbagging'], ['rfbagging']]
 
 
-"""
 # memory values
-W = [['decreasing'], ['increasing'], ['periodic'], ['random']]
-METRICS = ['memory']
-WS = [[20], [60], [20], [40]]
-B = [80, 40, 20, 100]
-HOMOGENEOUS = [['mlpbagging'], ['lstmbagging'], ['lstmbagging'], ['rfbagging']]
-"""
+# W = [['decreasing'], ['increasing'], ['periodic'], ['random']]
+# METRICS = ['memory']
+# WS = [[20], [60], [20], [40]]
+# B = [80, 40, 20, 100]
+# HOMOGENEOUS = [['mlpbagging'], ['lstmbagging'], ['lstmbagging'], ['rfbagging']]
 
-"""
+
 # responsetime values
-W = [['decreasing'], ['increasing'], ['periodic'], ['random']]
-METRICS = ['responsetime']
-WS = [[50], [30], [40], [40]]
-B = [150, 30, 100, 90]
-HOMOGENEOUS = [['mlpbagging'], ['rfbagging'], ['rfbagging'], ['rfbagging']]
-"""
+# W = [['decreasing'], ['increasing'], ['periodic'], ['random']]
+# METRICS = ['responsetime']
+# WS = [[50], [30], [40], [40]]
+# B = [150, 30, 100, 90]
+# HOMOGENEOUS = [['mlpbagging'], ['rfbagging'], ['rfbagging'], ['rfbagging']]
 
-"""
+
 # traffic values
-W = [['decreasing'], ['increasing'], ['periodic'], ['random']]
-METRICS = ['traffic']
-WS = [[60], [20], [50], [10]]
-B = [100, 100, 110, 150]
-HOMOGENEOUS = [['mlpbagging'], ['mlpbagging'], ['rfbagging'], ['rfbagging']]
-"""
+# W = [['decreasing'], ['increasing'], ['periodic'], ['random']]
+# METRICS = ['traffic']
+# WS = [[60], [20], [50], [10]]
+# B = [100, 100, 110, 150]
+# HOMOGENEOUS = [['mlpbagging'], ['mlpbagging'], ['rfbagging'], ['rfbagging']]
+
+
 for i in range(0, 4):
     MODEL_NAMES = ['arima', 'lstm', 'mlp', 'rf', 'svr', 'xgboost']
     parameters = list(product(ACCURACY_METRICS, METRICS, MODEL_NAMES, W[i], WINDOW_SIZES))
@@ -60,7 +57,7 @@ concatenate_results(TARGET_VARIABLES, METRICS, ML_MODELS, WINDOW_SIZES, ACCURACY
 everyone_folder_by_lag(TARGET_VARIABLES, METRICS, WINDOW_SIZES, ACCURACY_METRICS)
 summary_folder(TARGET_VARIABLES, METRICS, ACCURACY_METRICS, ML_MODELS)
 
-# All models by serie
+#All models by serie
 ML_MODELS = ['static_mean_homogeneous', 'static_median_homogeneous', 'dynamic_homogeneous',
              'dynamic_weighting_homogeneous', 'dynamic_weighting_with_selection_homogeneous',
              'static_mean_heterogeneous', 'static_median_heterogeneous', 'dynamic_heterogeneous',

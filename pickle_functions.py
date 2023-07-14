@@ -50,13 +50,10 @@ def save_the_pre_defined_pickle(predl, targetl, list_y_models_sequence, accuracy
     from pickle_functions import save_pickle
     from numpy import array
 
-    accuracy_metric = 'rmse'
     # Resolver probblema
     df_pickle = {'y_true_testing': targetl, 'y_pred_testing': predl,
                  'y_model_testing_sequence': list_y_models_sequence,
                  accuracy_metric + '_testing': calculate_model_accuracy(targetl, predl, accuracy_metric)}
-
-    print(df_pickle[accuracy_metric + '_testing'])
 
     save_pickle(df_pickle, filename_pickle)
 
