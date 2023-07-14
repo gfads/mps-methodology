@@ -50,6 +50,7 @@ def pre_process_dynamic_selection_data(dataset, key):
 
 def process_data_dynamic(dataset, path_id, max_lag_model, max_ws):
     d_rs = {}
+    print(path_id + max_lag_model)
     test_size = len(dataset[path_id + max_lag_model]['testing_sample'])  # Valor real
     #test_size = 3
     train, test = pre_process_dynamic_selection_data(dataset, path_id + max_lag_model)

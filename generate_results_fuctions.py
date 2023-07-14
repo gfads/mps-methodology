@@ -620,7 +620,8 @@ def generate_path_id(metric: list, workload: list, models: list, type: str):
     if type == 'homogeneous':
         path_id = []
         for wi in range(0, len(workload)):
-            path_id.append(workload[wi] + "/" + models[wi] + "/bagging/" + metric[0] + "/" + metric[0])
+            #path_id.append(workload[wi] + "/" + models[wi] + "/bagging/" + metric[0] + "/" + metric[0])
+            path_id.append(workload[wi] + "/" + models[wi] + "/bagging/" + metric[0] + '/' + metric[0])
 
         return path_id
     else:

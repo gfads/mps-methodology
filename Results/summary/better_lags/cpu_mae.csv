@@ -1,0 +1,5 @@
+,arima,lstm,mlp,rf,svr,xgboost
+decreasing,10,10,10,30,10,10
+increasing,10,60,10,60,40,40
+periodic,10,10,30,10,10,60
+random,10,60,20,60,10,60
