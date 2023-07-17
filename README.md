@@ -91,9 +91,5 @@ The table below summarizes both results.
 
 ## Time Series
 
-The time series used in the research can be found [here](Time%20Series). Alson, we also [plot](Time%20Series/plots)
+The time series used in the research can be found [here](Time%20Series). Also, we also [plot](Time%20Series/plots)
 all-time series and create a [description file](Time%20Series/series-description/serie-description.csv).
-
-# Note
-
-Documentation on how to train your models and use other time series is being created and will be published ASAP.
