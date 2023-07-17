@@ -26,7 +26,7 @@ costs, and their customer satisfaction is maintained.
 ### Download and extract from the models
 
 Download the models
-from [OneDrive](https://cinufpe-my.sharepoint.com/:u:/g/personal/wrms_cin_ufpe_br/EdLbxkskqx9Mo-dmWP3mgnABW6P3xL9_ItFgDbRprpFzeQ?e=yU35np)
+from [OneDrive](https://cinufpe-my.sharepoint.com/:u:/g/personal/wrms_cin_ufpe_br/ESmYfCk1chtAhx-WrHR4gxcBt-lBNubv-DDFOpIBHC_P1Q?e=H0njRw)
 and save them inside the MPS Methodology folder. Models were uploaded externally due to their size.
 
     $ unzip models.zip
