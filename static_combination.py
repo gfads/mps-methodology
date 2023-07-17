@@ -1,34 +1,42 @@
+import argparse
 from generate_results_fuctions import load_pickle_static, static_combination, generate_path_id, generate_idmodels
 
-WORKLOAD = ['decreasing', 'increasing', 'periodic', 'random']
-METRICS = ['responsetime']
-DEPLOYMENTS = ['frontend']
+CLI = argparse.ArgumentParser()
+CLI.add_argument("--approach", type=str)
+CLI.add_argument("--workload", type=str)
+CLI.add_argument("--metric", type=str)
+CLI.add_argument("--lag", type=int)
+CLI.add_argument("--lags", nargs="*", type=int)
+CLI.add_argument("--pool_size", type=int)
+CLI.add_argument("--learning_algorithm", type=str)
+CLI.add_argument("--learning_algorithms", nargs="*", type=str)
+CLI.add_argument("--deployment", type=str)
+CLI.add_argument("--competence_measure", type=str)
 
-# IF Homogeneous to ResponseTime
-WS = [50, 30, 40, 40]
-B = [150, 30, 100, 90]
-MN = ['mlp', 'rf', 'rf', 'rf']
+args = CLI.parse_args()
 
-"""
-# Heterogeneous
-MN = [['arima', 'lstm', 'mlp', 'rf', 'svr', 'xgboost'],
-      ['arima', 'lstm', 'mlp', 'rf', 'svr', 'xgboost'],
-      ['arima', 'lstm', 'mlp', 'rf', 'svr', 'xgboost'],
-      ['arima', 'lstm', 'mlp', 'rf', 'svr', 'xgboost']]
+approach = args.approach
+metrics = args.metric
+deployment = args.deployment
+workload = args.workload
+pool_size = args.pool_size
+competence_measure = args.competence_measure
 
-WS = [[10, 10, 10, 30, 10, 60],
-      [10, 60, 10, 60, 40, 40],
-      [10, 10, 60, 10, 10, 60],
-      [10, 60, 20, 10, 10, 10]]
-"""
 
-ACCURACY_METRICS = ['rmse']
+if approach == 'homogeneous':
+    lag = args.lag
+    learning_algorithm = args.learning_algorithm
+else:
+    lag = args.lags
+    learning_algorithm = args.learning_algorithms
+
+
 CENTRAL_MEASURES = ['mean', 'median']
 
-path_id = generate_path_id(METRICS, WORKLOAD, MN, 'homogeneous')
+path_id = generate_path_id(metrics, workload, deployment, learning_algorithm, approach)
 
-for i in range(0, 4):
-    id_models = generate_idmodels(B[i], METRICS, MN[i], 'homogeneous', WS[i])
-    dataset = load_pickle_static(ACCURACY_METRICS, id_models, path_id[i])
+id_models = generate_idmodels(metrics, pool_size, deployment, learning_algorithm, approach, lag)
+dataset = load_pickle_static(competence_measure, id_models, path_id)
 
-    static_combination(ACCURACY_METRICS, CENTRAL_MEASURES, dataset, id_models, 'homogeneous', path_id[i])
+print('Starting Mean and Median algorithm training')
+static_combination(competence_measure, CENTRAL_MEASURES, dataset, id_models, path_id, approach, deployment, metrics)

@@ -3,7 +3,6 @@ def load_model(model_path, model_name):
 
     if model_name[0: 4] == 'lstm':
         from keras.models import load_model
-        # model_load = load_model(model_path + '/' + model_name + '.h5')
         model_load = load_model("Pickle Models/" + model_path + '.h5')
     else:
         model_location = model_path + '/' + model_name + '.joblib'
@@ -31,7 +30,7 @@ def predict_data(data, model, ml_model: str, *arima_type):
             return model.predict(len(data))  # Prediz a quantidade de elemento de DAta
 
 
-def concatenate_results(target_variables, metrics, ml_models, window_sizes, accuracy_metric):
+def concatenate_results(target_variables, metrics, ml_models, window_sizes, accuracy_metric, deployment):
     from pandas import read_csv, DataFrame
     from numpy import array
 
@@ -45,12 +44,14 @@ def concatenate_results(target_variables, metrics, ml_models, window_sizes, accu
                         path_local = 'Results/' + target_variable + '/' + metric + '/' + str(
                             window_size) + '/'
                         ac_metric.append(
-                            read_csv(path_local + ml_model + '_' + ml_metric + '.csv')['testing'].tolist()[0])
+                            read_csv(path_local + deployment[0] + ml_model + '_' + ml_metric + '.csv')[
+                                'testing'].tolist()[0])
+
                     DataFrame(array(ac_metric).reshape(1, len(ml_models)), columns=ml_models).to_csv(
                         path_local + ml_metric + '.csv')
 
 
-def concatenate_results_with_one_result_dynamic(target_variables, metrics, ml_models, accuracy_metric):
+def concatenate_results_with_one_result_dynamic(target_variables, metrics, ml_models, accuracy_metric, deployment):
     from pandas import read_csv, DataFrame
     from numpy import array
     from background_functions import try_create_folder
@@ -64,13 +65,15 @@ def concatenate_results_with_one_result_dynamic(target_variables, metrics, ml_mo
                 ac_metric = []
                 for ml_model in ml_models:
                     ac_metric.append(
-                        read_csv(path_local + ml_model + '_' + ml_metric + '.csv')['testing'].tolist()[0])
+                        read_csv(path_local + deployment[0] + ml_model + '_' + ml_metric + '.csv')['testing'].tolist()[
+                            0])
+
                 DataFrame(array(ac_metric).reshape(1, len(ml_models)),
                           columns=[s + '' for s in ml_models], index=[target_variable]).to_csv(
-                    path_local + ml_metric + '.csv')
+                    path_local + deployment[0] + ml_metric + '.csv')
 
 
-def everyone_folder_by_lag(target_variables, metrics, windows_size, ml_metrics,
+def everyone_folder_by_lag(target_variables, metrics, windows_size, ml_metrics, deployment,
                            folder_name: str = 'Results'):
     from pandas import read_csv, DataFrame
     from numpy import array
@@ -92,10 +95,10 @@ def everyone_folder_by_lag(target_variables, metrics, windows_size, ml_metrics,
                         dados.append(d)
                 index = r.columns[1:]  # Pegando columns
                 DataFrame(array(dados).reshape(len(windows_size), len(index)).transpose(), columns=windows_size,
-                          index=index).to_csv(folder_everyone + '/' + ml_metric + '.csv')
+                          index=index).to_csv(folder_everyone + '/' + deployment[0] + ml_metric + '.csv')
 
 
-def everyone_folder_with_one_result_dynamic(target_variables, metrics, ml_metrics,
+def everyone_folder_with_one_result_dynamic(target_variables, metrics, ml_metrics, deployment,
                                             folder_name: str = 'Results'):
     from pandas import read_csv, DataFrame, concat
     from background_functions import try_create_folder
@@ -108,7 +111,8 @@ def everyone_folder_with_one_result_dynamic(target_variables, metrics, ml_metric
             df = DataFrame()
 
             for workload in target_variables:
-                path_local = folder_name + '/' + workload + '/' + metric + '/summary/' + ml_metric + '.csv'
+                path_local = folder_name + '/' + workload + '/' + metric + '/summary/' + deployment[
+                    0] + ml_metric + '.csv'
                 data = read_csv(path_local)
                 df = concat([df, data], axis=0)
 
@@ -117,7 +121,7 @@ def everyone_folder_with_one_result_dynamic(target_variables, metrics, ml_metric
             new_columns[0] = 'Workload'
             df.columns = new_columns
 
-            df.to_csv(path_v + metric + '_' + ml_metric + '.csv', index=False)
+            df.to_csv(path_v + deployment[0] + metric + '_' + ml_metric + '.csv', index=False)
 
 
 def calculate_the_oracle(target_variables, metrics, ml_models, accuracy_metrics, window_sizes, a, b,
@@ -176,20 +180,20 @@ def calculate_the_oracle(target_variables, metrics, ml_models, accuracy_metrics,
             print(oracle_by_workload[0][1])
 
 
-def everyone_folder_with_one_result_dynamic_all(metrics, ml_metrics,
+def everyone_folder_with_one_result_dynamic_all(metrics, ml_metrics, deployment,
                                                 folder_name: str = 'Results'):
     from pandas import read_csv, concat
     from background_functions import try_create_folder
 
-    path_local = try_create_folder(folder_name + '/summary/')
+    path_local = try_create_folder(folder_name + '/summary')
     path_v = try_create_folder(folder_name + '/summary/better_pool_values_aggregate/')
 
     for metric in metrics:
         for ml_metric in ml_metrics:
             data_by_lag = read_csv(
-                path_local + '/better_acurracy/' + metric + '_' + ml_metric + '.csv')
+                path_local + '/better_acurracy/' + deployment[0] + metric + '_' + ml_metric + '.csv')
             data_by_pool = read_csv(
-                path_local + '/better_pool_values/' + metric + '_' + ml_metric + '.csv')
+                path_local + '/better_pool_values/' + deployment[0] + metric + '_' + ml_metric + '.csv')
 
             df = concat([data_by_lag, data_by_pool], axis=1)
             df.drop(['Workload'], axis=1, inplace=True)
@@ -198,10 +202,10 @@ def everyone_folder_with_one_result_dynamic_all(metrics, ml_metrics,
             new_columns[0] = 'Workload'
             df.columns = new_columns
 
-            df.to_csv(path_v + metric + '_' + ml_metric + '.csv', index=False)
+            df.to_csv(path_v + deployment[0] + metric + '_' + ml_metric + '.csv', index=False)
 
 
-def summary_folder(target_variables, metrics, ml_metrics, ml_models, folder_name: str = 'Results'):
+def summary_folder(target_variables, metrics, ml_metrics, ml_models, deployment, folder_name: str = 'Results'):
     from pandas import read_csv, DataFrame
     from background_functions import try_create_folder
 
@@ -211,14 +215,13 @@ def summary_folder(target_variables, metrics, ml_metrics, ml_models, folder_name
 
     for metric in metrics:
         for ml_metric in ml_metrics:
-            print(ml_metric)
             df = DataFrame()
             df_id = DataFrame()
             for workload in target_variables:
-                path_local = folder_name + '/' + workload + '/' + metric + '/summary_lag/' + ml_metric + '.csv'
+                path_local = folder_name + '/' + workload + '/' + metric + '/summary_lag/' + deployment[
+                    0] + ml_metric + '.csv'
                 data = read_csv(path_local)
-                print(data)
-                df[workload] = data.min(axis=1)
+                df[workload] = data[data.columns[1:]].min(axis=1)
                 df_id[workload] = data.iloc[:, 1:].idxmin(axis=1)
 
             df = df.transpose()
@@ -226,8 +229,18 @@ def summary_folder(target_variables, metrics, ml_metrics, ml_models, folder_name
             df.columns = ml_models
             df_id.columns = ml_models
 
-            df.to_csv(path_v + metric + '_' + ml_metric + '.csv')
-            df_id.to_csv(path_l + metric + '_' + ml_metric + '.csv')
+            print('Better algorithm and lag for homogeneous in '+workload+' workload ')
+            better_model = df.idxmin(axis="columns")
+            x = 0
+            print('Workload Model Lag')
+            for index, row in df_id.iterrows():
+                print(index, better_model[x], row[better_model[x]])
+                x += 1
+
+            print('Algorithms and lags for the heterogeneous pool in '+workload+' workload. ')
+            print(df_id)
+            df.to_csv(path_v + deployment[0] + metric + '_' + ml_metric + '.csv')
+            df_id.to_csv(path_l + deployment[0] + metric + '_' + ml_metric + '.csv')
 
 
 def resume_folder(target_variables, metrics, ml_metrics, ml_models, folder_name: str = 'results'):
@@ -269,7 +282,7 @@ def calculate_accuracy_metrics_and_save_pickle(parameters: list, type_calculate:
     from pickle_functions import save_pickle, load_pickle
     from accuracy_metrics import calculate_model_accuracy
 
-    for accuracy_metric, metric, ml_model, target_variable, window_size in parameters:
+    for accuracy_metric, deployment, metric, ml_model, target_variable, window_size in parameters:
         if ml_model[0:3] == 'mlp':
             x = ml_model[0:3]
         elif ml_model[0:4] == 'lstm':
@@ -278,12 +291,12 @@ def calculate_accuracy_metrics_and_save_pickle(parameters: list, type_calculate:
             x = ml_model[0:2]
         else:
             x = ml_model
-        file_path = ""
+
         if type_calculate == '/bagging/':
             file_path = target_variable + "/" + x + type_calculate + metric + "/" + metric + ml_model + str(
                 window_size)
         else:
-            file_path = target_variable + "/" + x + type_calculate + metric + ml_model + str(
+            file_path = target_variable + "/" + x + type_calculate + metric + "/" + deployment + ml_model + str(
                 window_size)
 
         df_pickle = load_pickle(file_path)
@@ -294,9 +307,8 @@ def calculate_accuracy_metrics_and_save_pickle(parameters: list, type_calculate:
 
         # for sample in ['training', 'validation', 'testing']:
         for sample in ['training', 'testing']:
-            # for sample in ['testing']:
             y_true = df_pickle[sample + '_sample'][:, -1]
-            y_pred = predict_data(df_pickle[sample + '_sample'][:, 0:-1], model, ml_model)
+            y_pred = predict_data(df_pickle[sample + '_sample'][:, df_pickle['lag'][0:-1]], model, ml_model)
             df_pickle[accuracy_metric + '_' + sample] = calculate_model_accuracy(y_true, y_pred, accuracy_metric)
 
             df_pickle['y_true_' + sample] = y_true
@@ -311,8 +323,8 @@ def save_accuracy_metrics(parameters: list, folder_name: str = 'Results'):
     from pickle_functions import load_pickle
     from numpy import array
 
-    for accuracy_metric, metric, ml_model, target_variable, window_size in parameters:
-        file_path = target_variable + "/" + ml_model + "/monolithic/" + metric + ml_model + str(
+    for accuracy_metric, deployment, metric, ml_model, target_variable, window_size in parameters:
+        file_path = target_variable + "/" + ml_model + "/monolithic/" + metric + '/' + deployment + ml_model + str(
             window_size)
         df_pickle = load_pickle(file_path)
         path_folder = try_create_folder_aggregate(metric, target_variable, window_size, folder_name)
@@ -332,7 +344,11 @@ def save_accuracy_metrics(parameters: list, folder_name: str = 'Results'):
 
             accuracy_metric_values = [ac_training, ac_testing]
             DataFrame(array(accuracy_metric_values).reshape(1, 2), columns=['training', 'testing'],
-                      index=[accuracy_metric]).to_csv(path_folder + '/' + ml_model + '_' + accuracy_metric + '.csv')
+                      index=[accuracy_metric]).to_csv(
+                path_folder + '/' + deployment + ml_model + '_' + accuracy_metric + '.csv')
+
+        # print(
+        #     f'Metric {accuracy_metric} calculated for model {deployment + " " + ml_model + " on lag " + str(window_size)}')
 
 
 def save_accuracy_metrics_dynamic(parameters: list, folder_name: str = 'Results'):
@@ -359,12 +375,13 @@ def save_accuracy_metrics_one_model(parameters: list, folder_name: str = 'Result
     from numpy import array
     from accuracy_metrics import calculate_model_accuracy
 
-    for accuracy_metric, metric, ml_model, target_variable in parameters:
-        file_path = ""
+    for accuracy_metric, metric, ml_model, target_variable, deployment in parameters:
+        ""
+
         if ml_model[-11:] == 'homogeneous':
-            file_path = target_variable + "/homogeneous/" + metric + ml_model
+            file_path = target_variable + "/homogeneous/" + metric + '/' + deployment + ml_model[:-12]
         else:
-            file_path = target_variable + "/heterogeneous/" + metric + ml_model
+            file_path = target_variable + "/heterogeneous/" + metric + '/' + deployment + ml_model[:-14]
 
         df_pickle = load_pickle(file_path)
         path_folder = try_create_folder_aggregate_for_dynamic(metric, target_variable, 'summary',
@@ -379,15 +396,16 @@ def save_accuracy_metrics_one_model(parameters: list, folder_name: str = 'Result
 
         accuracy_metric_values = [ac_testing]
         DataFrame(array(accuracy_metric_values), columns=['testing'],
-                  index=[accuracy_metric]).to_csv(path_folder + '/' + ml_model + '_' + accuracy_metric + '.csv')
+                  index=[accuracy_metric]).to_csv(
+            path_folder + '/' + deployment + ml_model + '_' + accuracy_metric + '.csv')
         # print(path_folder + '/' + ml_model + '_' + accuracy_metric + '.csv')
 
 
 def save_figures(parameters: list, folder_name: str = 'Results'):
     from pickle_functions import load_pickle
 
-    for accuracy_metric, metric, ml_model, target_variable, window_size in parameters:
-        file_path = target_variable + "/" + ml_model + "/monolithic/" + metric + ml_model + str(
+    for accuracy_metric, deployment, metric, ml_model, target_variable, window_size in parameters:
+        file_path = target_variable + "/" + ml_model + "/monolithic/" + metric + '/' + deployment + ml_model + str(
             window_size)
         df_pickle = load_pickle(file_path)
 
@@ -398,7 +416,7 @@ def save_figures(parameters: list, folder_name: str = 'Results'):
 
         for sample in samples:
             path_folder = folder_name + '/' + target_variable + '/' + metric + '/' + str(
-                window_size) + '/' + ml_model + '_' + sample
+                window_size) + '/' + deployment + ml_model + '_' + sample
 
             y_true = df_pickle['y_true_' + sample]
             y_pred = df_pickle['y_pred_' + sample]
@@ -423,18 +441,17 @@ def save_figures_dynamic(parameters: list, folder_name: str = 'results'):
 def save_figures_dynamic_one_model(parameters: list, folder_name: str = 'Results'):
     from pickle_functions import load_pickle
 
-    for accuracy_metric, metric, ml_model, target_variable in parameters:
-        file_path = ""
+    for accuracy_metric, metric, ml_model, target_variable, deployment in parameters:
+
         if ml_model[-11:] == 'homogeneous':
-            file_path = target_variable + "/homogeneous/" + metric + ml_model
+            file_path = target_variable + "/homogeneous/" + metric + '/' + deployment + ml_model[:-12]
         else:
-            file_path = target_variable + "/heterogeneous/" + metric + ml_model
+            file_path = target_variable + "/heterogeneous/" + metric + '/' + deployment + ml_model[:-14]
 
         df_pickle = load_pickle(file_path)
 
         for sample in ['testing']:
-            path_folder = folder_name + '/' + target_variable + '/' + metric + '/summary/' + ml_model + '_' + sample
-            path_folder = folder_name + '/' + target_variable + '/' + metric + '/summary/' + ml_model + '_' + sample
+            path_folder = folder_name + '/' + target_variable + '/' + metric + '/summary/' + deployment + ml_model + '_' + sample
 
             y_true = df_pickle['y_true_' + sample]
             y_pred = df_pickle['y_pred_' + sample]
@@ -493,7 +510,7 @@ def forecast_by_a_given_serie(path_id, sample, dataset, ml_models, cm):
     return y_true, y_pred
 
 
-def static_combination(acurracy_metrics, central_measures, dataset, id_models, name_pickle, path_id):
+def static_combination(acurracy_metric, central_measures, dataset, id_models, path_id, approach, deployment, metric):
     from pickle_functions import save_pickle
     from accuracy_metrics import calculate_model_accuracy
 
@@ -504,14 +521,10 @@ def static_combination(acurracy_metrics, central_measures, dataset, id_models, n
             df_pickle['y_true_' + sample] = y_true
             df_pickle['y_pred_' + sample] = y_pred
 
-            for accuracy_metric in acurracy_metrics:
-                df_pickle[accuracy_metric + '_' + sample] = calculate_model_accuracy(y_true, y_pred, accuracy_metric)
-                print(df_pickle[accuracy_metric + '_' + sample])
+            df_pickle[acurracy_metric + '_' + sample] = calculate_model_accuracy(y_true, y_pred, acurracy_metric)
 
         path_split = path_id.split('/', 4)
-        save_pickle(df_pickle,
-                    path_split[0] + "/" + name_pickle + "/" + path_split[3] + 'static_' + cm + '_' + name_pickle)
-        # save_pickle(df_pickle, path_id + 'static_' + cm + '_' + name_pickle)
+        save_pickle(df_pickle, path_split[0] + "/" + approach + "/" + metric + '/' + deployment + 'static_' + cm)
 
 
 def prev_dynamic(model, nm, indices_cr, x_cr):
@@ -597,7 +610,8 @@ def calculate_the_down_alfa_dws(vector_predict, ws_mls):
 
 # Criar as chaves
 
-def generate_idmodels(bagging: int, metric: list, model_names: str, type: str, window_sizes: int) -> list:
+def generate_idmodels(metrics, bagging: int, deployment: list, model_names: str, approach: str,
+                      window_sizes: int) -> list:
     """
 
     :param model_names:
@@ -606,30 +620,27 @@ def generate_idmodels(bagging: int, metric: list, model_names: str, type: str, w
     """
     id_models = []
 
-    if type == 'homogeneous':
+    if approach == 'homogeneous':
         for i in range(0, bagging):
             id_models.append(model_names + "bagging" + str(i) + str(window_sizes))
-    elif type == 'heteregoneous':
+    elif approach == 'heteregoneous':
         for j in range(0, len(model_names)):
-            id_models.append(model_names[j] + "/monolithic/" + metric[0] + model_names[j] + str(window_sizes[j]))
+            id_models.append(
+                model_names[j] + "/monolithic/" + metrics + '/' + deployment + model_names[j] + str(window_sizes[j]))
 
     return id_models
 
 
-def generate_path_id(metric: list, workload: list, models: list, type: str):
-    if type == 'homogeneous':
-        path_id = []
-        for wi in range(0, len(workload)):
-            #path_id.append(workload[wi] + "/" + models[wi] + "/bagging/" + metric[0] + "/" + metric[0])
-            path_id.append(workload[wi] + "/" + models[wi] + "/bagging/" + metric[0] + '/' + metric[0])
+def generate_path_id(metric: list, workload: list, deployment, models: list, approach: str):
+    if approach == 'homogeneous':
+        return workload + "/" + models + "/bagging/" + metric + '/' + deployment
 
-        return path_id
+        #     path_id.append(workload[wi] + "/" + models[wi] + "/bagging/" + metric[0] + '/' + metric[0])
+        #
+        # return path_id
     else:
-        path_id = []
-        for wi in range(0, len(workload)):
-            path_id.append(workload[wi] + "/")
 
         # for m in models[wi]:
         # path_id.append(workload[wi] + "/" + str(m) + "/monolithic/" + metric[0])
 
-        return path_id
+        return workload + "/"

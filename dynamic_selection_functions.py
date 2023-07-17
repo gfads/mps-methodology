@@ -50,9 +50,7 @@ def pre_process_dynamic_selection_data(dataset, key):
 
 def process_data_dynamic(dataset, path_id, max_lag_model, max_ws):
     d_rs = {}
-    print(path_id + max_lag_model)
     test_size = len(dataset[path_id + max_lag_model]['testing_sample'])  # Valor real
-    #test_size = 3
     train, test = pre_process_dynamic_selection_data(dataset, path_id + max_lag_model)
     d_rs[max_ws + 'train'] = train
     d_rs[max_ws + 'test'] = test
@@ -165,6 +163,7 @@ def dynamic_selection_algorithms(path_id, id_models, dataset, accuracy_metric, c
     # Receber id do modelo que obteve o maior lag
     m_id, m_ws = get_maximum_ws(id_models)
     d_rs, test_size = process_data_dynamic(dataset, path_id, m_id, m_ws)
+    test_size = 10
     region_competence_pipeline(crs, d_rs, m_ws, test_size)
     process_for_dealing_with_heterogeneous_lags(dataset, d_rs, id_models, path_id, m_ws)
     forecast_of_technical_models(accuracy_metric, d_rs, id_models, test_size, m_ws)
@@ -172,8 +171,8 @@ def dynamic_selection_algorithms(path_id, id_models, dataset, accuracy_metric, c
     return d_rs, m_id, m_ws, test_size
 
 
-def dynamic_selection(accuracy_metric: str, d_rs: dict, id_models: list, max_ws: str, name_pickle: str, path_id: str,
-                      test_size: int):
+def dynamic_selection(accuracy_metric: str, d_rs: dict, id_models: list, max_ws: str, path_id: str,
+                      test_size: int, metric, deployment, approach):
     from accuracy_metrics import calculate_model_accuracy
     from pickle_functions import save_the_pre_defined_pickle
     from numpy import Inf
@@ -183,7 +182,6 @@ def dynamic_selection(accuracy_metric: str, d_rs: dict, id_models: list, max_ws:
     targetl = []
     namel = []
     for i_test in range(0, test_size):
-        print(i_test)
         better_result = Inf
         name_model = ''
         select_model = ''
@@ -216,12 +214,13 @@ def dynamic_selection(accuracy_metric: str, d_rs: dict, id_models: list, max_ws:
         namel.append([name_model])
 
     path_split = path_id.split('/', 4)
-    name_pickle_split = name_pickle.split('_', 1)
+
     save_the_pre_defined_pickle(predl, targetl, namel, accuracy_metric,
-                                path_split[0] + "/" + name_pickle_split[1] + "/" + path_split[3] + name_pickle)
+                                path_split[0] + "/" + approach + '/' + metric + '/' + deployment + 'dynamic_selection')
 
 
-def dynamic_weighting(path_id, id_models, dataset, accuracy_metric, d_rs, max_id_model, max_ws, test_size, name_pickle):
+def dynamic_weighting(path_id, id_models, dataset, accuracy_metric, d_rs, max_id_model, max_ws, test_size, metric,
+                      deployment, approach):
     from pickle_functions import save_the_pre_defined_pickle
 
     for i_test in range(0, test_size):
@@ -263,14 +262,13 @@ def dynamic_weighting(path_id, id_models, dataset, accuracy_metric, d_rs, max_id
     testing_sample = dataset[path_id + max_id_model]['testing_sample']
 
     path_split = path_id.split('/', 4)
-    name_pickle_split = name_pickle.split('_', 2)
-    #print(path_split[0] + "/" + name_pickle_split[2] + "/" + path_split[3] + name_pickle)
+
     save_the_pre_defined_pickle(testing_sample[0:test_size, -1], predl, "", accuracy_metric,
-                                path_split[0] + "/" + name_pickle_split[2] + "/" + path_split[3] + name_pickle)
+                                path_split[0] + "/" + approach + '/' + metric + '/' + deployment + 'dynamic_weighting')
 
 
 def dynamic_weighting_selection(path_id, id_models, dataset, accuracy_metric, d_rs, max_id_model, max_ws,
-                                test_size, name_pickle):
+                                test_size, metric, deployment, approach):
     from pickle_functions import save_the_pre_defined_pickle
 
     for i_test in range(0, test_size):
@@ -328,7 +326,7 @@ def dynamic_weighting_selection(path_id, id_models, dataset, accuracy_metric, d_
 
     testing_sample = dataset[path_id + max_id_model]['testing_sample']
     path_split = path_id.split('/', 4)
-    name_pickle_split = name_pickle.split('_', 4)
-    print(path_split[0] + "/" + name_pickle_split[4] + "/" + path_split[3] + name_pickle)
+
     save_the_pre_defined_pickle(testing_sample[0:test_size, -1], predl, "", accuracy_metric,
-                                path_split[0] + "/" + name_pickle_split[4] + "/" + path_split[3] + name_pickle)
+                                path_split[
+                                    0] + "/" + approach + '/' + metric + '/' + deployment + 'dynamic_weighting_with_selection')

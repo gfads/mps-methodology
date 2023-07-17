@@ -1,6 +1,4 @@
 def calculate_model_accuracy(y_true, y_pred, metric: str):
-    from accuracy_metrics import rmse, mape
-
     if metric == 'mse':
         return mse(y_true, y_pred)
     elif metric == 'rmse':
@@ -16,7 +14,7 @@ def calculate_model_accuracy(y_true, y_pred, metric: str):
     elif metric == 'mae':
         return mae(y_true, y_pred)
     else:
-        return 'The metric is yet not implemented'
+        return 'This competence metric is not yet implemented.'
 
 
 def mape(y_true, y_pred):

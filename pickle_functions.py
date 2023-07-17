@@ -2,14 +2,14 @@ def df_pickle_bagging(model, model_name: str, window_size: int, h_step: int, tes
                       scaler, level_grid: str, file_path: str):
     df_pickle = {'model': model['model'], 'window_size': window_size, 'h_step': h_step,
                  'training_sample': model['training_sample'], 'validation_sample': model['validation_sample'],
-                 'testing_sample': testing, 'total_sample': total, 'lags': lags, 'scaler': scaler,
+                 'testing_sample': testing, 'total_sample': total, 'lag': lags, 'scaler': scaler,
                  'level_grid': level_grid, 'indices': model['indices'], 'number_of_models': len(model['model'])}
 
     if model_name == 'lstm':
         for i in range(0, df_pickle['number_of_models']):
             path_aux = file_path[:-2] + level_grid + str(i) + str(window_size)
-            df_pickle['model'][i].save(filepath='pickle/' + path_aux + '.h5', overwrite=True)
-            df_pickle['model'][i] = 'pickle/' + path_aux + '.h5'
+            df_pickle['model'][i].save(filepath='Pickle Models/' + path_aux + '.h5', overwrite=True)
+            df_pickle['model'][i] = 'Pickle Models/' + path_aux + '.h5'
 
     return df_pickle
 
@@ -17,12 +17,12 @@ def df_pickle_bagging(model, model_name: str, window_size: int, h_step: int, tes
 def df_pickle_only(model, model_name, file_path: str, window_size: int, h_step: int, training: list,
                    validation: list, testing: list, total: list, lags: int, scaler, level_grid: str):
     df_pickle = {'model': model, 'window_size': window_size, 'h_step': h_step, 'training_sample': training,
-                 'validation_sample': validation, 'testing_sample': testing, 'total_sample': total, 'lags': lags,
+                 'validation_sample': validation, 'testing_sample': testing, 'total_sample': total, 'lag': lags,
                  'scaler': scaler, 'level_grid': level_grid, 'number_of_models': 1}
 
     if model_name == 'lstm':
-        df_pickle['model'] = 'pickle/' + file_path + '.h5'
-        model.save(filepath='pickle/' + file_path + '.h5', overwrite=True)
+        df_pickle['model'] = 'Pickle Models/' + file_path + '.h5'
+        model.save(filepath='Pickle Models/' + file_path + '.h5', overwrite=True)
 
     return df_pickle
 
@@ -69,6 +69,10 @@ def ml_models_bagging(model_names, tam):
 
 def save_pickle(df_pickle, filename_pickle: str):
     from pickle import dump
+    from os import path, makedirs
+
+    if not path.isdir('Pickle Models/' + filename_pickle[0:filename_pickle.rfind('/') + 1]):
+        makedirs('Pickle Models/' + filename_pickle[0:filename_pickle.rfind('/') + 1])
 
     dump(df_pickle, open('Pickle Models/' + filename_pickle + '.sav', 'wb'))
 
