@@ -13,7 +13,7 @@ improve the decision-making process of these systems by more reliably estimating
 incorrect adaptations triggered by inaccurate estimates. Consequently, microservices have a reduction in operating
 costs, and their customer satisfaction is maintained.
 
-# Instalattion
+# Installation
 
 ## How to install the software?
 
