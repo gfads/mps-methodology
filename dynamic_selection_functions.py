@@ -5,6 +5,8 @@ def load_pickle_dynamic(id_models, path_id):
     dataset = {}
     for id_model in id_models:
         df_pickle = load_pickle(path_id + id_model)
+
+        print(path_id + id_model)
         if id_model[0:4] == 'lstm':
             model = load_model(df_pickle['model'], id_model)
         else:
@@ -40,7 +42,7 @@ def pre_process_dynamic_selection_data(dataset, key):
     training_sample = dataset[key]['training_sample']  # Valor real
     validation_sample = dataset[key]['validation_sample']  # Valor real
 
-    if validation_sample:
+    if validation_sample != []:
         training_sample = combine_training_and_validation_data(training_sample, validation_sample)
 
     testing_sample = dataset[key]['testing_sample']  # Valor real
@@ -65,6 +67,7 @@ def calculate_the_distance_between_the_windows(training_sample, testing_sample):
     competence_region = []
 
     for i_training in range(0, len(training_sample)):
+
         d = euclidean(testing_sample, training_sample[i_training, 0:-1])
         competence_region.append(d)
 
@@ -114,8 +117,8 @@ def process_for_dealing_with_heterogeneous_lags(dataset, d_rs, id_models, path_i
         d_rs[id_model + 'model'] = dataset[path_id + id_model]['model']
         lags = dataset[path_id + id_model]['lag']
 
-        if (len(lags) - 1) != max_ws:
-            lags = ((int(max_ws) - len(lags) + 1) + array(dataset[path_id + id_model]['lag']))
+        if lags[-1] != int(max_ws):
+            lags = ((int(max_ws) - lags[-1]) + array(dataset[path_id + id_model]['lag']))
             lags = lags.tolist()
 
         d_rs[id_model + 'lag'] = lags
@@ -149,7 +152,7 @@ def forecast_of_technical_models(accuracy_metric, d_rs, id_models, test_size, ma
             lags = d_rs[id_model + 'lag']
 
             y_pred = predict_for_dynamic(model, id_model, d_rs[str(i_test) + max_ws + 'indices_cr'],
-                                         d_rs[str(i_test) + max_ws + 'x_cr'][:, lags[:-1]], 'in_sample')
+                                         d_rs[str(i_test) + max_ws + 'x_cr'][:, lags[: -1]], 'in_sample')
 
             d_rs[str(i_test) + id_model + 'y_pred'] = y_pred
             d_rs[str(i_test) + id_model + 'sqe'] = sqe_new(y_pred, d_rs[str(i_test) + max_ws + 'y_cr'])
@@ -163,7 +166,6 @@ def dynamic_selection_algorithms(path_id, id_models, dataset, accuracy_metric, c
     # Receber id do modelo que obteve o maior lag
     m_id, m_ws = get_maximum_ws(id_models)
     d_rs, test_size = process_data_dynamic(dataset, path_id, m_id, m_ws)
-    test_size = 10
     region_competence_pipeline(crs, d_rs, m_ws, test_size)
     process_for_dealing_with_heterogeneous_lags(dataset, d_rs, id_models, path_id, m_ws)
     forecast_of_technical_models(accuracy_metric, d_rs, id_models, test_size, m_ws)
@@ -201,8 +203,8 @@ def dynamic_selection(accuracy_metric: str, d_rs: dict, id_models: list, max_ws:
 
                 window = d_rs[max_ws + 'test'][i_test, lags[0:-1]].reshape(1, -1)
 
-                if name_model[0: 4] == 'lstm':
-                    select_model = 'pickle/' + path_id + id_model + '.h5'
+                #if name_model[0: 4] == 'lstm':
+                #select_model = 'pickle/' + path_id + id_model + '.h5'
 
                 if name_model[0: 5] == 'arima':
                     window = i_test + 1

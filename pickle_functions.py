@@ -8,6 +8,11 @@ def df_pickle_bagging(model, model_name: str, window_size: int, h_step: int, tes
     if model_name == 'lstm':
         for i in range(0, df_pickle['number_of_models']):
             path_aux = file_path[:-2] + level_grid + str(i) + str(window_size)
+
+            print(df_pickle['model'])
+
+            print(df_pickle['model'][i])
+
             df_pickle['model'][i].save(filepath='Pickle Models/' + path_aux + '.h5', overwrite=True)
             df_pickle['model'][i] = 'Pickle Models/' + path_aux + '.h5'
 
@@ -34,6 +39,7 @@ def save_model(model, model_name: str, ws: int, h_step: int, training: list, tes
                                    scaler, level_grid), file_path)
 
     if level_grid == 'bagging':
+
         df = df_pickle_bagging(model, model_name, ws, h_step, testing, total, lags, scaler, level_grid, file_path)
 
         for i in range(0, df['number_of_models']):
@@ -48,7 +54,6 @@ def save_model(model, model_name: str, ws: int, h_step: int, training: list, tes
 def save_the_pre_defined_pickle(predl, targetl, list_y_models_sequence, accuracy_metric, filename_pickle):
     from accuracy_metrics import calculate_model_accuracy
     from pickle_functions import save_pickle
-    from numpy import array
 
     # Resolver probblema
     df_pickle = {'y_true_testing': targetl, 'y_pred_testing': predl,

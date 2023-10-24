@@ -157,18 +157,19 @@ def transform_data(deployment: str, path_ts: str, ws: int, multiple_windows: boo
 
     if multiple_windows:
         vali_size, test_size = get_fixed_sample_sizes(max_ws[0], ts_normalized, train_perc, vali_perc)
+
         if vali_perc == 0:
             train, test = split_serie_when_multiple_windows(test_size, vali_size, ts_in_windows)
 
-            return train, test, ts, lags, scaler
+            return train, test, ts_normalized, lags, scaler
         else:
             train, vali, test = split_serie_when_multiple_windows(test_size, vali_size, ts_in_windows)
 
-            return train, vali, test, ts, lags, scaler
+            return train, vali, test, ts_normalized, lags, scaler
     else:
         if vali_perc == 0:
             train, test = split_serie(ts_in_windows, train_perc, vali_perc)
-            return train, test, ts, lags, scaler
+            return train, test, ts_normalized, lags, scaler
         else:
             train, vali, test = split_serie(ts_in_windows, train_perc, vali_perc)
-            return train, vali, test, ts, lags, scaler
+            return train, vali, test, ts_normalized, lags, scaler

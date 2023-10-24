@@ -2,8 +2,8 @@ def load_model(model_path, model_name):
     from joblib import load
 
     if model_name[0: 4] == 'lstm':
-        from keras.models import load_model
-        model_load = load_model("Pickle Models/" + model_path + '.h5')
+        from tensorflow.keras.models import load_model
+        model_load = load_model(model_path)
     else:
         model_location = model_path + '/' + model_name + '.joblib'
         model_load = load(model_location)
@@ -16,7 +16,8 @@ def predict_data(data, model, ml_model: str, *arima_type):
         return model.predict(data)
     elif ml_model[0: 7] == 'xgboost':
         from xgboost import DMatrix
-        return model.predict(DMatrix(data))
+        # return model.predict(DMatrix(data))
+        return model.predict(data)
     elif ml_model[0: 4] == 'lstm':
         data = data.reshape((data.shape[0], data.shape[1], 1))
         return model.predict(data).ravel()
@@ -25,7 +26,7 @@ def predict_data(data, model, ml_model: str, *arima_type):
             if arima_type[0] == 'in_sample':
                 return model.predict_in_sample(data)[data]
             elif arima_type[0] == 'out_sample':  # Prediz até um elemento N
-                return model.predict(data)[-1]
+                return [model.predict(data)[-1]]
         else:
             return model.predict(len(data))  # Prediz a quantidade de elemento de DAta
 
@@ -202,12 +203,15 @@ def everyone_folder_with_one_result_dynamic_all(metrics, ml_metrics, deployment,
             new_columns[0] = 'Workload'
             df.columns = new_columns
 
+            print(df)
+
             df.to_csv(path_v + deployment[0] + metric + '_' + ml_metric + '.csv', index=False)
 
 
 def summary_folder(target_variables, metrics, ml_metrics, ml_models, deployment, folder_name: str = 'Results'):
     from pandas import read_csv, DataFrame
     from background_functions import try_create_folder
+    import os
 
     try_create_folder(folder_name + '/summary')
     path_l = try_create_folder(folder_name + '/' + '/summary/better_lags/')
@@ -217,6 +221,7 @@ def summary_folder(target_variables, metrics, ml_metrics, ml_models, deployment,
         for ml_metric in ml_metrics:
             df = DataFrame()
             df_id = DataFrame()
+
             for workload in target_variables:
                 path_local = folder_name + '/' + workload + '/' + metric + '/summary_lag/' + deployment[
                     0] + ml_metric + '.csv'
@@ -229,19 +234,8 @@ def summary_folder(target_variables, metrics, ml_metrics, ml_models, deployment,
             df.columns = ml_models
             df_id.columns = ml_models
 
-            print('Better algorithm and lag for homogeneous in '+workload+' workload ')
-            better_model = df.idxmin(axis="columns")
-            x = 0
-            print('Workload Model Lag')
-            for index, row in df_id.iterrows():
-                print(index, better_model[x], row[better_model[x]])
-                x += 1
-
-            print('Algorithms and lags for the heterogeneous pool in '+workload+' workload. ')
-            print(df_id)
             df.to_csv(path_v + deployment[0] + metric + '_' + ml_metric + '.csv')
             df_id.to_csv(path_l + deployment[0] + metric + '_' + ml_metric + '.csv')
-
 
 def resume_folder(target_variables, metrics, ml_metrics, ml_models, folder_name: str = 'results'):
     from pandas import read_csv, DataFrame
@@ -300,19 +294,22 @@ def calculate_accuracy_metrics_and_save_pickle(parameters: list, type_calculate:
                 window_size)
 
         df_pickle = load_pickle(file_path)
+        # print(file_path)
         if ml_model[0:4] == 'lstm':
-            model = load_model(file_path, ml_model)
+            model = load_model(df_pickle['model'], ml_model)
         else:
             model = df_pickle['model']
 
-        # for sample in ['training', 'validation', 'testing']:
-        for sample in ['training', 'testing']:
-            y_true = df_pickle[sample + '_sample'][:, -1]
-            y_pred = predict_data(df_pickle[sample + '_sample'][:, df_pickle['lag'][0:-1]], model, ml_model)
-            df_pickle[accuracy_metric + '_' + sample] = calculate_model_accuracy(y_true, y_pred, accuracy_metric)
+        for sample in ['training', 'validation', 'testing']:
+            if ml_model == 'arima' and sample == 'validation':
+                pass
+            else:
+                y_true = df_pickle[sample + '_sample'][:, -1]
+                y_pred = predict_data(df_pickle[sample + '_sample'][:, df_pickle['lag'][0:-1]], model, ml_model)
+                df_pickle[accuracy_metric + '_' + sample] = calculate_model_accuracy(y_true, y_pred, accuracy_metric)
 
-            df_pickle['y_true_' + sample] = y_true
-            df_pickle['y_pred_' + sample] = y_pred
+                df_pickle['y_true_' + sample] = y_true
+                df_pickle['y_pred_' + sample] = y_pred
 
         save_pickle(df_pickle, file_path)
 
@@ -337,7 +334,9 @@ def save_accuracy_metrics(parameters: list, folder_name: str = 'Results'):
             accuracy_metric_values = [ac_training, ac_validation, ac_testing]
 
             DataFrame(array(accuracy_metric_values).reshape(1, 3), columns=['training', 'validation', 'testing'],
-                      index=[accuracy_metric]).to_csv(path_folder + '/' + ml_model + '_' + accuracy_metric + '.csv')
+                      index=[accuracy_metric]).to_csv(
+                path_folder + '/' + deployment + ml_model + '_' + accuracy_metric + '.csv')
+
         else:  # Only training and testing
             ac_training = df_pickle[accuracy_metric + '_training']
             ac_testing = df_pickle[accuracy_metric + '_testing']
@@ -469,15 +468,16 @@ def load_pickle_static(acurracy_metrics, id_models, path_id):
         df_pickle = load_pickle(path_id + id_model)
 
         if id_model[0: 4] == 'lstm':
-            print(df_pickle['model'])
             model = load_model(df_pickle['model'], id_model)
         else:
             model = df_pickle['model']
 
         for sample in ['training', 'validation', 'testing']:
             if df_pickle[sample + '_sample'] != []:
+                lags = df_pickle['lag']
+
                 y_true = df_pickle[sample + '_sample'][:, -1]
-                y_pred = predict_data(df_pickle[sample + '_sample'][:, 0:-1], model, id_model)
+                y_pred = predict_data(df_pickle[sample + '_sample'][:, lags[:-1]], model, id_model)
 
                 dataset[path_id + id_model + sample] = [y_pred, y_true]
 
@@ -623,7 +623,7 @@ def generate_idmodels(metrics, bagging: int, deployment: list, model_names: str,
     if approach == 'homogeneous':
         for i in range(0, bagging):
             id_models.append(model_names + "bagging" + str(i) + str(window_sizes))
-    elif approach == 'heteregoneous':
+    elif approach == 'heterogeneous':
         for j in range(0, len(model_names)):
             id_models.append(
                 model_names[j] + "/monolithic/" + metrics + '/' + deployment + model_names[j] + str(window_sizes[j]))

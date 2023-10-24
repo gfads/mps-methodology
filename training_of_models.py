@@ -1,13 +1,13 @@
-def pipeline_sklearn(model, training_sample, competence_measure, validation_sample: list = []):
+def pipeline_sklearn(model, training_sample, competence_measure, lags, validation_sample: list = []):
     from accuracy_metrics import calculate_model_accuracy
-    x_train, y_train = training_sample[:, 0:-1], training_sample[:, -1]
+
+    x_train, y_train = training_sample[:, lags[:-1]], training_sample[:, lags[-1]]
     model.fit(x_train, y_train)
 
-    if validation_sample:  # Se existe, faça!
-        x_val, y_val = validation_sample[:, 0:-1], validation_sample[:, -1]
+    if validation_sample != []:  # Se existe, faça!
+        x_val, y_val = validation_sample[:, lags[:-1]], validation_sample[:, lags[-1]]
         predicted = model.predict(x_val)
         accuracy_metric = calculate_model_accuracy(y_val, predicted, competence_measure)
-
         return model, accuracy_metric
     else:
         return model
@@ -29,88 +29,73 @@ def find_better_model(training_models):
     return best_model
 
 
-def svr_train(training_sample, validation_sample: list = [], level_grid: str = 'default', pool_size: int = 100,
-              competence_measure: str = 'rmse'):
+def svr_train(training_sample, validation_sample: list = [], lags: list = [], level_grid: str = 'default',
+              pool_size: int = 100, competence_measure: str = 'rmse'):
     from sklearn.svm import SVR
+    import random
 
     if level_grid == 'default':
         model = SVR()
-        model = pipeline_sklearn(model, training_sample, competence_measure)
+        model = pipeline_sklearn(model, training_sample, competence_measure, lags)
 
         return model
     elif level_grid == 'hard':
         from itertools import product
 
-        kernel = ['rbf', 'sigmoid']
-        gamma = [0.1, 0.5, 10, 50, 100, 1000]
-        epsilon = [1, 0.1, 0.001, 0.0001, 0.00001]
-        regularization_parameter = [0.1, 1, 5, 10, 100, 1000]
-        hyper_param = list(product(kernel, gamma, epsilon, regularization_parameter))
+        kernel: list = ['rbf', 'sigmoid']
+        gamma: list = [0.001, 0.01, 0.1, 1]
+        epsilon: list = [0.1, 0.001, 0.0001]
+        regularization_parameter: list = [0.1, 1, 10, 100, 1000, 10000]
+
+        hyper_param = list(product(kernel, gamma, regularization_parameter, epsilon))
 
         training_models = []
-        for k, g, e, rp in hyper_param:
+        for k, g, rp, e in hyper_param:
             training_models.append(
-                pipeline_sklearn(SVR(C=rp, epsilon=e, kernel=k, gamma=g), training_sample, competence_measure,
-                                 validation_sample))
+                pipeline_sklearn(SVR(kernel=k, gamma=g, C=rp, epsilon=e, ), training_sample,
+                                 competence_measure,
+                                 lags, validation_sample=validation_sample))
 
         return find_better_model(training_models)
 
     elif level_grid == 'bagging':
-        models = bagging(pool_size, training_sample, validation_sample, 'svr', competence_measure)
+        models = bagging(pool_size, training_sample, validation_sample, 'svr', competence_measure, lags)
 
         return models
 
 
-def mlp_train(training_sample, validation_sample: list = [], level_grid: str = 'default', pool_size: int = 100,
-              competence_measure: str = 'rmse'):
+def mlp_train(training_sample, validation_sample: list = [], lags: list = [], level_grid: str = 'default',
+              pool_size: int = 100, competence_measure: str = 'rmse'):
     from sklearn.neural_network import MLPRegressor
     from itertools import product
 
     if level_grid == 'default':
         model = MLPRegressor()
-        model = pipeline_sklearn(model, training_sample, competence_measure)
+        model = pipeline_sklearn(model, training_sample, competence_measure, lags)
 
         return model
     elif level_grid == 'hard':
-        hidden_layer_sizes = [1, 5, 10, 50, 100]
-        activation = ['identity', 'tanh', 'relu', 'logistic']
+        hidden_layer_sizes = [5, 10, 15, 20]
+        activation = ['tanh', 'relu', 'logistic']
         solver = ['lbfgs', 'sgd', 'adam']
-        max_iter = [1000]
-        learning_rate = ['constant', 'invscaling', 'adaptive']
-        num_exec = 10
-        hyper_param = list(product(hidden_layer_sizes, activation, solver, max_iter, learning_rate, range(0, num_exec)))
+        max_iter = [100, 500, 1000, 2000, 3000]
+        learning_rate = ['constant', 'adaptive']
+
+        hyper_param = list(product(hidden_layer_sizes, activation, solver, max_iter, learning_rate))
 
         training_models = []
-        for hls, a, s, mi, lr, _ in hyper_param:
+
+        for hls, a, s, mi, lr in hyper_param:
             training_models.append(
                 pipeline_sklearn(
                     MLPRegressor(hidden_layer_sizes=hls, activation=a, solver=s, max_iter=mi, learning_rate=lr),
-                    training_sample, competence_measure, validation_sample))
+                    # MLPRegressor(hidden_layer_sizes=hls, activation=a, solver=s),
+                    training_sample, competence_measure, lags, validation_sample=validation_sample))
 
         return find_better_model(training_models)
 
-    # Improving the accuracy of intelligent forecasting models using the Perturbation
-    # Theory
-    elif level_grid == 'acf':
-        from itertools import product
-
-        learning_rate_init = [0.0001, 0.001, 0.00001]
-        solver = ['lbfgs', 'sgd', 'adam']
-        hidden_layer_sizes = [1, 5, 10, 15, 20]
-
-        hyper_param = list(product(learning_rate_init, solver, hidden_layer_sizes))
-
-        training_models = []
-        for lri, s, hls, in hyper_param:
-            training_models.append(pipeline_sklearn(MLPRegressor(hidden_layer_sizes=hls, solver=s,
-                                                                 learning_rate_init=lri), training_sample,
-                                                    competence_measure,
-                                                    validation_sample)[0])
-
-        return training_models
-
     elif level_grid == 'bagging':
-        models = bagging(pool_size, training_sample, validation_sample, 'mlp', competence_measure)
+        models = bagging(pool_size, training_sample, validation_sample, 'mlp', competence_measure, lags)
 
         return models
 
@@ -127,214 +112,194 @@ def reamostragem(serie, n):
     return ind_particao
 
 
-def bagging(qtd_modelos, training_sample, validation_sample, name_model, competence_measure):
-    from sklearn.neural_network import MLPRegressor
-    from sklearn.ensemble import RandomForestRegressor
-    from sklearn.svm import SVR
-    from keras.models import Sequential
-    from keras.layers import LSTM, Dense
-
+def bagging(qtd_modelos, training_sample, validation_sample, name_model, competence_measure, lags):
     models = {'model': [], 'training_sample': [], 'validation_sample': [], 'indices': []}
 
     for i in range(qtd_modelos):
         print('Training model: ', i)
-        indices = reamostragem(training_sample, len(training_sample))
-        particao = training_sample[indices, :]
+        indices_training = reamostragem(training_sample, len(training_sample))
+        particao = training_sample[indices_training, :]
 
         if name_model == 'mlp':
-            model = MLPRegressor()
-        elif name_model == 'rf':
-            model = RandomForestRegressor()
+            models['model'].append(
+                mlp_train(particao, validation_sample=validation_sample, lags=lags, level_grid='hard',
+                          competence_measure=competence_measure))
         elif name_model == 'svr':
-            model = SVR()
-
-        if name_model == 'mlp' or name_model == 'rf' or name_model == 'svr':
-            models['model'].append(pipeline_sklearn(model, particao, competence_measure, validation_sample))
+            models['model'].append(
+                svr_train(particao, validation_sample=validation_sample, lags=lags, level_grid='hard',
+                          competence_measure=competence_measure))
+        elif name_model == 'rf':
+            models['model'].append(rf_train(particao, validation_sample=validation_sample, lags=lags, level_grid='hard',
+                                            competence_measure=competence_measure))
         elif name_model == 'xgboost':
-            models['model'].append(pipeline_xgboost(1, {}, particao, competence_measure, validation_sample)[0])
-
+            models['model'].append(
+                xgboost_train(particao, validation_sample=validation_sample, lags=lags, level_grid='hard',
+                              competence_measure=competence_measure))
         elif name_model == 'lstm':
-            x_training = particao[:, 0:-1]
-            y_training = particao[:, -1]
-            x_training = x_training.reshape((x_training.shape[0], x_training.shape[1], 1))
-            lags = x_training.shape[1]
+            models['model'].append(
+                    lstm_train(particao, validation_sample=validation_sample, lags=lags, level_grid='hard',
+                               competence_measure=competence_measure))
 
-            model = Sequential()
-            model.add(LSTM(4, input_shape=(lags, 1)))
-            model.add(Dense(1))
-            model.compile(optimizer='Adam', loss='mean_squared_error')
-            model.fit(x_training, y_training)
-            models['model'].append(model)
+        elif name_model == 'arima':
+            models['model'].append(
+                    arima_train(particao, level_grid='hard', window_size=lags, competence_measure=competence_measure))
+
 
         models['training_sample'].append(particao)
         models['validation_sample'].append(validation_sample)
-        models['indices'].append(indices)
+        models['indices'].append(indices_training)
 
     return models
 
 
-def rf_train(training_sample, validation_sample: list = [], level_grid='default', pool_size: int = 100,
+def rf_train(training_sample, validation_sample: list = [], lags: list = [], level_grid='default', pool_size: int = 100,
              competence_measure: str = 'rmse'):
     from sklearn.ensemble import RandomForestRegressor
     from itertools import product
 
     if level_grid == 'default':
         from sklearn.ensemble import RandomForestRegressor
-        model = pipeline_sklearn(RandomForestRegressor(), training_sample, competence_measure)
+        model = pipeline_sklearn(RandomForestRegressor(), training_sample, competence_measure, lags)
 
         return model
     elif level_grid == 'hard':
-        bootstrap = [True, False]
-        max_depth = [10, 60, 100, None]
-        max_features = ['auto', 'sqrt']
-        min_samples_leaf = [1, 2, 4]
-        min_samples_split = [2, 5, 10]
-        n_estimators = [100, 200, 300]
 
-        hyper_param = list(
-            product(bootstrap, max_depth, max_features, min_samples_leaf, min_samples_split, n_estimators))
+        min_samples_leaf = [1, 5, 10]
+        min_samples_split = [2, 5, 10, 15]
+        n_estimators = [100, 500, 1000]
+
+
+        hyper_param = list(product(min_samples_leaf, min_samples_split, n_estimators))
 
         training_models = []
-        for b, md, mf, msl, mss, ne in hyper_param:
+        for msl, mss, ne in hyper_param:
             training_models.append(
-                RandomForestRegressor(bootstrap=b, max_depth=md, max_features=mf, n_estimators=ne, min_samples_leaf=msl,
-                                      min_samples_split=mss), training_sample, validation_sample)
+                pipeline_sklearn(RandomForestRegressor(n_estimators=ne, min_samples_leaf=msl, min_samples_split=mss),
+                                 training_sample, competence_measure, lags, validation_sample)
+            )
 
         model = find_better_model(training_models)
 
         return model
 
-    # End-to-End Latency Prediction of Microservices Workflow on Kubernetes:
-    # A Comparative Evaluation of Machine Learning Models and Resource Metrics
-    elif level_grid == 'acf':
-        bootstrap = ['True', 'False']
-        max_features = ['auto', 'sqrt', 'log2']
-        n_estimators = [10, 100, 250, 500]
-
-        hyper_param = list(
-            product(bootstrap, max_features, n_estimators))
-
-        training_models = []
-
-        for b, mf, ne in hyper_param:
-            training_models.append(pipeline_sklearn(RandomForestRegressor(bootstrap=b,
-                                                                          max_features=mf,
-                                                                          n_estimators=ne), training_sample,
-                                                    competence_measure,
-                                                    validation_sample)[0])
-
-        return training_models
-
     elif level_grid == 'bagging':
-        models = bagging(pool_size, training_sample, validation_sample, 'rf', competence_measure)
+        models = bagging(pool_size, training_sample, validation_sample, 'rf', competence_measure, lags)
 
         return models
 
 
-def pipeline_xgboost(num_exec, parameters, training_sample, competence_measure, validation_sample: list = []):
+def pipeline_xgboost(parameters, training_sample, competence_measure, lags, validation_sample: list = []):
     from accuracy_metrics import calculate_model_accuracy
-    from xgboost import DMatrix, train
+    from xgboost import XGBRegressor
 
-    training_sample_dmatrix = DMatrix(training_sample[:, 0:-1], training_sample[:, -1])
-    model = train(parameters, training_sample_dmatrix, num_exec)
+    x_train, y_train = training_sample[:, lags[:-1]], training_sample[:, lags[-1]]
 
-    if validation_sample:
-        validation_sample_dmatrix = DMatrix(validation_sample[:, 0:-1], validation_sample[:, -1])
-        predicted = model.predict(validation_sample_dmatrix)
-        accuracy_metric = calculate_model_accuracy(validation_sample[:, -1], predicted, competence_measure)
+    model = XGBRegressor(learning_rate=parameters['learning_rate'], max_depth=parameters['max_depth'],
+                         n_estimators=parameters['n_estimators'], reg_alpha=parameters['reg_alpha'],
+                         subsample=parameters['subsample'],
+                         tree_method="hist")
+
+    model.fit(x_train, y_train)
+
+    if validation_sample != []:
+        predicted = model.predict(validation_sample[:, lags[:-1]])
+        accuracy_metric = calculate_model_accuracy(validation_sample[:, lags[-1]], predicted, competence_measure)
 
         return model, accuracy_metric
     else:
         return model
 
 
-def xgboost_train(training_sample, validation_sample: list = [], level_grid='default', pool_size: int = 100,
+def xgboost_train(training_sample, validation_sample: list = [], lags: list = [], level_grid='default',
+                  pool_size: int = 100,
                   competence_measure: str = 'rmse'):
     from itertools import product
-
     if level_grid == 'default':
-        model = pipeline_xgboost(1, {}, training_sample, competence_measure)
+        model = pipeline_xgboost(1, {}, training_sample, competence_measure, lags)
 
         return model
     elif level_grid == 'hard':
-        min_child_weight = [1, 5, 10]
-        gamma = [0.5, 1, 1.5, 2, 5]
-        subsample = [0.6, 0.8, 1.0]
-        colsample_bytree = [0.6, 0.8, 1.0]
-        max_depth = [3, 4, 5, 6]
-        eta = [0.01, 0.3]
-        hyper_param = list(product(min_child_weight, gamma, subsample, colsample_bytree, max_depth, eta))
+
+        learning_rate = [0.1, 0.05]
+        reg_alpha = [1, 5]
+        max_depth = [25, 50]
+        n_estimators = [100, 150]
+        subsample = [0.5, 0.8]
+
+        hyper_param = list(product(learning_rate, reg_alpha, max_depth, n_estimators,
+                                   reg_alpha, subsample))
 
         training_models = []
-        for mcw, g, ss, csb, md, e in hyper_param:
-            training_models.append(pipeline_xgboost(10, {'min_child_weight': mcw, 'gamma': g, 'subsample': ss,
-                                                         'colsample_bytree': csb, 'max_depth': md,
-                                                         'eta': e}, training_sample, competence_measure,
-                                                    validation_sample))
+        for lr, ra, md, ne, re, ssa in hyper_param:
+            training_models.append(pipeline_xgboost({'learning_rate': lr, 'reg_alpha': ra, 'max_depth': md,
+                                                     'n_estimators': ne, 'subsample': ssa}, training_sample,
+                                                    competence_measure,
+                                                    lags, validation_sample))
 
         model = find_better_model(training_models)
 
         return model
 
     elif level_grid == 'bagging':
-        models = bagging(pool_size, training_sample, validation_sample, 'xgboost', competence_measure)
+        models = bagging(pool_size, training_sample, validation_sample, 'xgboost', competence_measure, lags)
 
         return models
 
 
-def lstm_train(training_sample, validation_sample: list = [], level_grid='default', pool_size: int = 100,
-               competence_measure: str = 'rmse'):
+def lstm_train(training_sample, validation_sample: list = [], lags: list = [], level_grid='default',
+               pool_size: int = 100, competence_measure: str = 'rmse'):
     from keras.models import Sequential
     from keras.layers import LSTM, Dense
     from tensorflow.keras.optimizers import Adam
     from numpy import Inf, isnan
     from accuracy_metrics import calculate_model_accuracy
     from itertools import product
-
-    x_training = training_sample[:, 0:-1]
-    y_training = training_sample[:, -1]
-    x_training = x_training.reshape((x_training.shape[0], x_training.shape[1], 1))
-    lags = x_training.shape[1]
+    import random
 
     if level_grid == 'default':
+        x_training = training_sample[:, lags[:-1]]
+        y_training = training_sample[:, lags[-1]]
+        x_training = x_training.reshape((x_training.shape[0], x_training.shape[1], 1))
+
+        lags_size = x_training.shape[1]
+
         model = Sequential()
-        model.add(LSTM(4, input_shape=(lags, 1)))
+        model.add(LSTM(4, input_shape=(lags_size, 1)))
         model.add(Dense(1))
         model.compile(optimizer='Adam', loss='mean_squared_error')
         model.fit(x_training, y_training)  # , epochs=20, verbose=0, batch_size=len(x_training))
 
-        # model.add(LSTM(4, activation='relu', input_shape=(lags, 1)))
-        # model.add(Dense(1))
-        # model.compile(optimizer='Adam', loss='mean_squared_error')
-        # model.fit(x_training, y_training, epochs=20, verbose=0, batch_size=len(x_training))
-
-        # model.add(LSTM(4, activation='relu', input_shape=(lags, 1)))
-        # model.add(Dense(1))
-        # model.compile(optimizer='Adam', loss='mean_squared_error')
-        # model.fit(x_training, y_training, epochs=100, verbose=0, batch_size=1)
-
         return model
     elif level_grid == 'hard':
+        x_training = training_sample[:, lags[:-1]]
+        y_training = training_sample[:, lags[-1]]
+        x_training = x_training.reshape((x_training.shape[0], x_training.shape[1], 1))
+
+        lags_size = x_training.shape[1]
 
         epochs = [1, 2, 4, 8, 10]
         learning_rate = [0.05, 0.01, 0.001]
-        batches = [1, 64, 128]
+        batches = [64, 128]
         number_of_units = [50, 75, 125]
-        # number_of_hidden_layers = [2, 3, 4, 5, 6]
+        number_of_hidden_layers = [2, 3, 4, 5, 6]
 
         best_accuracy_measure = Inf
         best_model_lstm = Sequential()
 
-        parameters = list(product(range(0, 1), epochs, learning_rate, batches, number_of_units))
+        hyper_param = list(product(epochs, learning_rate, batches, number_of_units, number_of_hidden_layers))
 
-        for _, e, lr, b, nu in parameters:
+        for e, lr, b, nu, nhr in hyper_param:
             model = Sequential()
-            model.add(LSTM(nu, activation='relu', input_shape=(lags, 1)))
+
+            for _ in range(0, nhr):
+                model.add(LSTM(nu, activation='relu', return_sequences=True, input_shape=(lags_size, 1)))
+
+            model.add(LSTM(nu, activation='relu', input_shape=(lags_size, 1)))
             model.add(Dense(1))
             model.compile(optimizer=Adam(learning_rate=lr), loss='mean_squared_error')
             model.fit(x_training, y_training, epochs=e, verbose=0, batch_size=b)
 
-            x_validation = validation_sample[:, 0:-1]
+            x_validation = validation_sample[:, lags[:-1]]
             x_validation = x_validation.reshape((x_validation.shape[0], x_validation.shape[1], 1))
             forecast = model.predict(x_validation)
 
@@ -350,7 +315,7 @@ def lstm_train(training_sample, validation_sample: list = [], level_grid='defaul
         return best_model_lstm
 
     elif level_grid == 'bagging':
-        models = bagging(pool_size, training_sample, validation_sample, 'lstm', competence_measure)
+        models = bagging(pool_size, training_sample, validation_sample, 'lstm', competence_measure, lags)
 
         return models
 
@@ -383,24 +348,24 @@ def find_p_d_q_arima(data, window_size):
     return p, d, q
 
 
-def arima_train(data: list, level_grid: str, window_size: int = 0, pool_size: int = 100,
+def arima_train(data: list, level_grid: str, window_size: int = 0, pool_size: int = 150,
                 competence_measure: str = 'rmse'):
     from pmdarima.arima import auto_arima
 
     if level_grid == 'hard':
         p, d, q = find_p_d_q_arima(data, window_size)
 
-        if d == 0:
-            arima_model = auto_arima(data, start_p=0, start_q=0, max_p=p, max_q=q,
-                                     seasonal=False, error_action='warn', trace=False, suppress_warnings=True,
-                                     stepwise=True)
-        else:
-            arima_model = auto_arima(data, start_p=0, d=d, start_q=0, max_p=p, max_d=2, max_q=q,
-                                     seasonal=False, error_action='warn', trace=False, suppress_warnings=True,
-                                     stepwise=True)
+        arima_model = auto_arima(data, start_p=0, start_q=0, max_p=p, max_q=q,
+                                 seasonal=False, error_action='warn', trace=False, suppress_warnings=True,
+                                 stepwise=True)
 
         return arima_model
     elif level_grid == 'default':
         arima_model = auto_arima(data)
 
         return arima_model
+
+    elif level_grid == 'bagging':
+        models = bagging(pool_size, data, data, 'arima', competence_measure, window_size)
+
+        return models

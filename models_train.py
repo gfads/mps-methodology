@@ -3,6 +3,7 @@ from pickle_functions import save_model
 from training_of_models import *
 from preprocess import transform_data
 from itertools import product
+import os
 
 CLI = argparse.ArgumentParser()
 
@@ -14,13 +15,16 @@ CLI.add_argument("--learning_algorithms", nargs="*", type=str)
 CLI.add_argument("--metrics", nargs="*", type=str)
 CLI.add_argument("--pool_size", type=int)
 CLI.add_argument("--workloads", nargs="*", type=str)
+CLI.add_argument("--max_ws", type=int)
 
 args = CLI.parse_args()
 
 if not args.approach or not args.deployment or not args.lags or not args.learning_algorithms or not args.metrics or not args.workloads:
     print('You need to specify the performance approach, deployments, lags, learning_algorimths and workloads!')
-    print('For example: python3 models_train.py --approach monolithic --deployment frontend --lags 10 20 30 40 50 60 --learning_algorithms mlp rf svr --metrics cpu --workloads increasing')
-    print('For example: python3 models_train.py python3 models_train.py --approach homogeneous --deployment frontend --lags 10 --learning_algorithms mlp --metrics cpu --workloads increasing')
+    print(
+        'For example: python3 models_train.py --approach monolithic --deployment frontend --lags 10 20 30 40 50 60 --learning_algorithms mlp rf svr --metrics cpu --workloads increasing')
+    print(
+        'For example: python3 models_train.py python3 models_train.py --approach homogeneous --deployment frontend --lags 10 --learning_algorithms mlp --metrics cpu --workloads increasing')
     exit()
 
 if args.approach not in ['homogeneous', 'heterogeneous', 'monolithic']:
@@ -37,7 +41,7 @@ if args.approach == 'homogeneous':
 
     args.approach = LEVEL_GRID = 'bagging'
 elif args.approach in ['monolithic', 'heterogeneous']:
-    LEVEL_GRID = 'default'
+    LEVEL_GRID = 'hard'
     args.approach = 'monolithic'
 
 METRICS = args.metrics
@@ -49,37 +53,46 @@ approach = args.approach
 competence_measure = args.competence_measure
 
 if not args.pool_size:
-    pool_size = 100
+    pool_size = 150
 else:
     pool_size = args.pool_size
 
 parameters = list(product(WORKLOAD, METRICS, DEPLOYMENTS, WINDOW_SIZES))
 
-for w, m, d, ws in parameters:
-    path = 'Time Series/' + w + '/' + m + '.csv'
-    training, testing, total, lags, scaler = transform_data(d, path, ws, True, 0.8, 0, WINDOW_SIZES[-1])
+if approach != 'monolithic':
+    for w, m, d, ws in parameters:
+        path = 'Time Series/' + w + '/' + m + '.csv'
+        training, validation, testing, total, lags, scaler = transform_data(d, path, ws, True, 0.6, 0.2, WINDOW_SIZES[-1])
 
-    trained_model = 0
+        trained_model = 0
 
-    for mn in MODEL_NAMES:
-        if mn == 'svr':
-            trained_model = svr_train(training[:, lags], level_grid=LEVEL_GRID, pool_size=pool_size,
-                                      competence_measure=competence_measure)
-        elif mn == 'mlp':
-            trained_model = mlp_train(training[:, lags], level_grid=LEVEL_GRID, pool_size=pool_size,
-                                      competence_measure=competence_measure)
-        elif mn == 'rf':
-            trained_model = rf_train(training[:, lags], level_grid=LEVEL_GRID, pool_size=pool_size,
-                                     competence_measure=competence_measure)
-        elif mn == 'xgboost':
-            trained_model = xgboost_train(training[:, lags], level_grid=LEVEL_GRID, pool_size=pool_size,
-                                          competence_measure=competence_measure)
-        elif mn == 'lstm':
-            trained_model = lstm_train(training[:, lags], level_grid=LEVEL_GRID, pool_size=pool_size,
-                                       competence_measure=competence_measure)
-        elif mn == 'arima':
-            trained_model = arima_train(total[:(int(len(total) * 0.8))], level_grid=LEVEL_GRID, pool_size=pool_size,
-                                        competence_measure=competence_measure)
+        for mn in MODEL_NAMES:
+            if mn == 'svr':
+                trained_model = svr_train(training, competence_measure=competence_measure, lags=lags,
+                                          level_grid=LEVEL_GRID, pool_size=pool_size, validation_sample=validation)
+            elif mn == 'mlp':
+                trained_model = mlp_train(training, competence_measure=competence_measure, lags=lags,
+                                          level_grid=LEVEL_GRID, pool_size=pool_size, validation_sample=validation)
+            elif mn == 'rf':
+                trained_model = rf_train(training, competence_measure=competence_measure, lags=lags,
+                                         level_grid=LEVEL_GRID, pool_size=pool_size, validation_sample=validation)
+            elif mn == 'xgboost':
+                trained_model = xgboost_train(training, competence_measure=competence_measure, lags=lags,
+                                              level_grid=LEVEL_GRID, pool_size=pool_size, validation_sample=validation)
+            elif mn == 'lstm':
+                trained_model = lstm_train(training, competence_measure=competence_measure, lags=lags,
+                                           level_grid=LEVEL_GRID, pool_size=pool_size, validation_sample=validation)
+            elif mn == 'arima':
+                trained_model = arima_train(total[:(int(len(total) * 0.8))], level_grid=LEVEL_GRID,
+                                            # trained_model = arima_train(training, level_grid=LEVEL_GRID,
+                                            competence_measure=competence_measure, window_size=ws)
 
         save_model(trained_model, mn, ws, 1, training, testing, total, lags, scaler, LEVEL_GRID,
-                   w + '/' + mn + '/' + approach + '/' + m + '/' + d + mn + str(ws))
+                   w + '/' + mn + '/' + approach + '/' + m + '/' + d + mn + str(ws), validation=validation)
+
+if approach == 'monolithic':
+    os.system('python3 generate_initial_results.py --competence_measure ' + competence_measure + ' --deployment ' + str(
+        *DEPLOYMENTS) + ' --lags ' + ' '.join([str(v) for v in WINDOW_SIZES]) + ' --learning_algorithms ' + ' '.join(
+        [str(v) for v in MODEL_NAMES]) + ' --metrics ' + ' '.join(
+        [str(v) for v in METRICS]) + ' --workloads ' + ' '.join(
+        [str(v) for v in WORKLOAD]))
