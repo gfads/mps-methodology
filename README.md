@@ -90,6 +90,7 @@ results for just the memory metric, do:
     $ python3 generate_pool_results.py --competence_measure rmse --deployment microservice1 --lags 10 20 30 40 50 60 --learning_algorithms arima lstm xgboost svr rf mlp --metric memory --workloads microservice1;
         
 
+<<<<<<< HEAD
 # Summary of other information presented throughout the paper.
 
 ## Learning algorithm parameters
@@ -118,6 +119,8 @@ The following table summarises both results for real-world series.
 
 <table><thead><tr><th>Datasets</th><th></th><th>Approaches</th><th></th><th></th></tr></thead><tbody><tr><td>Time Series</td><td>Workload</td><td>Best Monolithic</td><td>Monolithic Lag</td><td>Homogeneous Pool Size</td></tr><tr><td rowspan="4">CPU<br>Usage</td><td>Decreasing</td><td>SVR</td><td>10</td><td>20</td></tr><tr><td>Increasing</td><td>SVR</td><td>40</td><td>20</td></tr><tr><td>Periodic</td><td>SVR</td><td>20</td><td>20</td></tr><tr><td>Random</td><td>MLP</td><td>10</td><td>10</td></tr><tr><td rowspan="4">Memory<br><br></td><td>Decreasing</td><td>SVR</td><td>40</td><td>150</td></tr><tr><td>Increasing</td><td>SVR</td><td>10</td><td>110</td></tr><tr><td>Periodic</td><td>MLP</td><td>60</td><td>10</td></tr><tr><td>Random</td><td>SVR</td><td>10</td><td>130</td></tr><tr><td rowspan="4">Response<br>Time</td><td>Decreasing</td><td>SVR</td><td>10</td><td>20</td></tr><tr><td>Increasing</td><td>MLP</td><td>50</td><td>30</td></tr><tr><td>Periodic</td><td>XGBoost</td><td>20</td><td>30</td></tr><tr><td>Random</td><td>RF</td><td>40</td><td>100</td></tr><tr><td rowspan="4">Traffic<br><br></td><td>Decreasing</td><td>RF</td><td>20</td><td>30</td></tr><tr><td>Increasing</td><td>MLP</td><td>10</td><td>60</td></tr><tr><td>Periodic</td><td>SVR</td><td>50</td><td>90</td></tr><tr><td>Random</td><td>LSTM</td><td>20</td><td>30</td></tr></tbody></table>
 
+=======
+>>>>>>> cb19b8da9224a792ca7d74515d51af959938d3dd
 ## Time Series
 
 The time series used in the research can be found [here](Time%20Series). Also, we also [plot](Time%20Series/plots)
