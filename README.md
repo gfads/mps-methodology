@@ -88,9 +88,7 @@ results for just the memory metric, do:
     
     $ python3 generate_initial_results.py --competence_measure rmse --deployment microservice1 --lags 10 20 30 40 50 60 --learning_algorithms arima lstm xgboost svr rf mlp --metrics memory  --workloads microservice1;
     $ python3 generate_pool_results.py --competence_measure rmse --deployment microservice1 --lags 10 20 30 40 50 60 --learning_algorithms arima lstm xgboost svr rf mlp --metric memory --workloads microservice1;
-        
 
-<<<<<<< HEAD
 # Summary of other information presented throughout the paper.
 
 ## Learning algorithm parameters
