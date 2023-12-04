@@ -61,7 +61,7 @@ parameters = list(product(WORKLOAD, METRICS, DEPLOYMENTS, WINDOW_SIZES))
 
 if approach != 'monolithic':
     for w, m, d, ws in parameters:
-        path = 'Time Series/' + w + '/' + m + '.csv'
+        path = 'time_series/' + w + '/' + m + '.csv'
         training, validation, testing, total, lags, scaler = transform_data(d, path, ws, True, 0.6, 0.2, WINDOW_SIZES[-1])
 
         trained_model = 0

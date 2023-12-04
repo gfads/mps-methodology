@@ -42,7 +42,7 @@ def concatenate_results(target_variables, metrics, ml_models, window_sizes, accu
                 for ml_metric in accuracy_metric:
                     ac_metric = []
                     for ml_model in ml_models:
-                        path_local = 'Results/' + target_variable + '/' + metric + '/' + str(
+                        path_local = 'results/' + target_variable + '/' + metric + '/' + str(
                             window_size) + '/'
                         ac_metric.append(
                             read_csv(path_local + deployment[0] + ml_model + '_' + ml_metric + '.csv')[
@@ -60,7 +60,7 @@ def concatenate_results_with_one_result_dynamic(target_variables, metrics, ml_mo
     for target_variable in target_variables:
         for metric in metrics:
             path_local = try_create_folder(
-                'Results/' + target_variable + '/' + metric + '/summary/')
+                'results/' + target_variable + '/' + metric + '/summary/')
 
             for ml_metric in accuracy_metric:
                 ac_metric = []
@@ -75,7 +75,7 @@ def concatenate_results_with_one_result_dynamic(target_variables, metrics, ml_mo
 
 
 def everyone_folder_by_lag(target_variables, metrics, windows_size, ml_metrics, deployment,
-                           folder_name: str = 'Results'):
+                           folder_name: str = 'results'):
     from pandas import read_csv, DataFrame
     from numpy import array
     from background_functions import try_create_folder
@@ -100,7 +100,7 @@ def everyone_folder_by_lag(target_variables, metrics, windows_size, ml_metrics, 
 
 
 def everyone_folder_with_one_result_dynamic(target_variables, metrics, ml_metrics, deployment,
-                                            folder_name: str = 'Results'):
+                                            folder_name: str = 'results'):
     from pandas import read_csv, DataFrame, concat
     from background_functions import try_create_folder
 
@@ -182,7 +182,7 @@ def calculate_the_oracle(target_variables, metrics, ml_models, accuracy_metrics,
 
 
 def everyone_folder_with_one_result_dynamic_all(metrics, ml_metrics, deployment,
-                                                folder_name: str = 'Results'):
+                                                folder_name: str = 'results'):
     from pandas import read_csv, concat
     from background_functions import try_create_folder
 
@@ -208,7 +208,7 @@ def everyone_folder_with_one_result_dynamic_all(metrics, ml_metrics, deployment,
             df.to_csv(path_v + deployment[0] + metric + '_' + ml_metric + '.csv', index=False)
 
 
-def summary_folder(target_variables, metrics, ml_metrics, ml_models, deployment, folder_name: str = 'Results'):
+def summary_folder(target_variables, metrics, ml_metrics, ml_models, deployment, folder_name: str = 'results'):
     from pandas import read_csv, DataFrame
     from background_functions import try_create_folder
     import os
@@ -314,7 +314,7 @@ def calculate_accuracy_metrics_and_save_pickle(parameters: list, type_calculate:
         save_pickle(df_pickle, file_path)
 
 
-def save_accuracy_metrics(parameters: list, folder_name: str = 'Results'):
+def save_accuracy_metrics(parameters: list, folder_name: str = 'results'):
     from pandas import DataFrame
     from background_functions import try_create_folder_aggregate
     from pickle_functions import load_pickle
@@ -350,7 +350,7 @@ def save_accuracy_metrics(parameters: list, folder_name: str = 'Results'):
         #     f'Metric {accuracy_metric} calculated for model {deployment + " " + ml_model + " on lag " + str(window_size)}')
 
 
-def save_accuracy_metrics_dynamic(parameters: list, folder_name: str = 'Results'):
+def save_accuracy_metrics_dynamic(parameters: list, folder_name: str = 'results'):
     from pandas import DataFrame
     from background_functions import try_create_folder_aggregate
     from pickle_functions import load_pickle
@@ -367,7 +367,7 @@ def save_accuracy_metrics_dynamic(parameters: list, folder_name: str = 'Results'
                   index=[accuracy_metric]).to_csv(path_folder + '/' + ml_model + '_' + accuracy_metric + '.csv')
 
 
-def save_accuracy_metrics_one_model(parameters: list, folder_name: str = 'Results'):
+def save_accuracy_metrics_one_model(parameters: list, folder_name: str = 'results'):
     from pandas import DataFrame
     from background_functions import try_create_folder_aggregate_for_dynamic
     from pickle_functions import load_pickle, save_pickle
@@ -400,7 +400,7 @@ def save_accuracy_metrics_one_model(parameters: list, folder_name: str = 'Result
         # print(path_folder + '/' + ml_model + '_' + accuracy_metric + '.csv')
 
 
-def save_figures(parameters: list, folder_name: str = 'Results'):
+def save_figures(parameters: list, folder_name: str = 'results'):
     from pickle_functions import load_pickle
 
     for accuracy_metric, deployment, metric, ml_model, target_variable, window_size in parameters:
@@ -437,7 +437,7 @@ def save_figures_dynamic(parameters: list, folder_name: str = 'results'):
             create_plot(y_true, y_pred, '' + ml_model.upper() + ' in ' + sample, metric, 'Minutes (m)', path_folder)
 
 
-def save_figures_dynamic_one_model(parameters: list, folder_name: str = 'Results'):
+def save_figures_dynamic_one_model(parameters: list, folder_name: str = 'results'):
     from pickle_functions import load_pickle
 
     for accuracy_metric, metric, ml_model, target_variable, deployment in parameters:
