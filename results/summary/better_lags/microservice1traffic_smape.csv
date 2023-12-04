@@ -1,0 +1,2 @@
+,arima,lstm,mlp,rf,svr,xgboost
+microservice1,10,30,60,20,10,10
